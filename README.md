@@ -104,7 +104,21 @@ Este repositorio contiene la resolución de la actividad de Verificación y Vali
 ## Nivel 3 — Diagrama de Componentes (C4Component)
 
 ```mermaid
-
+C4Component
+    title Diagrama C4 Component — Motor interno del juego Tetris
+    Container_Boundary(tetrisApp, "Aplicación del Juego (Interfaz de Usuario)") {
+        Component(inputManager, "Gestor de Entrada de Teclado", "Módulo JS / Event Listener", "Captura eventos de teclado (mover izquierda, derecha, abajo, rotar) y los traduce en comandos. Solo procesa entrada si la partida está activa (R4, R5).")
+        Component(gravityEngine, "Motor de Caída y Gravedad", "Módulo JS / setInterval", "Ejecuta el game loop. Hace caer el tetromino activo automáticamente según el intervalo del nivel actual. Aumenta la velocidad al subir de nivel (R6, R26).")
+        Component(boardController, "Controlador del Tablero", "Módulo JS / Matriz 10x24", "Núcleo del juego. Gestiona la matriz de juego (R2). Valida movimientos y rotaciones (R7, R8, R9). Fija tetrominós (R10, R11, R12). Elimina filas completas (R13, R14). Detecta derrota (R16).")
+        Component(scoreRenderer, "Renderizador del Puntaje", "Módulo JS / DOM Updater", "Muestra y actualiza la puntuación (R21, R23), nivel actual (R22), conteo de dobles, triples y tetrises (R24), filas necesarias para avanzar (R25) y estadísticas al perder (R29).")
+    }
+    Person(player, "Jugador", "Interactúa con el juego mediante el teclado")
+    System_Ext(localStorage, "Almacenamiento Local", "Guarda configuraciones y puntajes máximos")
+    Rel(player, inputManager, "Pulsa teclas de movimiento y rotación")
+    Rel(inputManager, boardController, "Envía comandos: mover / rotar tetromino")
+    Rel(gravityEngine, boardController, "Solicita descenso automático en cada tick")
+    Rel(boardController, scoreRenderer, "Notifica filas eliminadas y nivel alcanzado")
+    Rel(scoreRenderer, localStorage, "Persiste puntaje máximo al finalizar la partida")
 ```
 
 ---
@@ -112,7 +126,40 @@ Este repositorio contiene la resolución de la actividad de Verificación y Vali
 ## Nivel 4 — Diagrama Dinámico (C4Dynamic)
 
 ```mermaid
-
+sequenceDiagram
+    actor Jugador
+    participant GEK as Gestor de Entrada<br/>de Teclado
+    participant CT as Controlador<br/>del Tablero
+    participant MCG as Motor de Caída<br/>y Gravedad
+    participant RP as Renderizador<br/>del Puntaje
+    Jugador->>GEK: Pulsa tecla ROTAR (↑ / Z)
+    GEK->>GEK: Valida que la partida esté activa
+    GEK->>CT: enviarComando(ROTAR)
+    CT->>CT: Calcula nueva orientación del tetromino (90°)
+    CT->>CT: Valida que no salga del tablero (R7, R8)
+    CT->>CT: Valida que no solape bloques fijos (R9)
+    alt Rotación válida
+        CT->>CT: Aplica nueva orientación al tetromino activo
+        CT-->>GEK: OK
+    else Rotación inválida
+        CT-->>GEK: RECHAZADO (sin cambios)
+    end
+    GEK-->>Jugador: Visualiza tetromino rotado (o sin cambio)
+    Note over CT, MCG: El game loop de gravedad sigue corriendo en paralelo
+    MCG->>CT: tick() — solicita descenso automático
+    CT->>CT: Valida si puede bajar una celda
+    alt Puede bajar
+        CT->>CT: Mueve tetromino una celda hacia abajo
+    else No puede bajar — colisión inferior
+        CT->>CT: Fija tetromino en el tablero (R10, R11)
+        CT->>CT: Detecta y elimina filas completas (R13, R14)
+        CT->>RP: notificarFilasEliminadas(cantidad, nivelActual)
+        RP->>RP: Calcula puntuación (sistema Nintendo R23)
+        RP->>RP: Actualiza nivel, dobles, triples, tetrises (R24, R25)
+        RP-->>CT: OK
+        CT->>CT: Solicita nuevo tetromino (R15)
+        CT->>CT: Verifica condición de derrota (R16)
+    end
 ```
 
 ---
