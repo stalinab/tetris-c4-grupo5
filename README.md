@@ -88,7 +88,14 @@ Este repositorio contiene la resolución de la actividad de Verificación y Vali
 ## Nivel 1 — Diagrama de Contexto (C4Context)
 
 ```mermaid
+C4Context
+    title Diagrama de Contexto de Sistema (Nivel 1) — Juego Tetris
 
+    Person(player, "Jugador", "Interactúa con el juego para mover piezas, limpiar filas y acumular puntos en la sesión actual.")
+    
+    System(sistema_tetris, "Sistema Tetris", "Software central que gestiona las mecánicas del juego, validación de colisiones en la cuadrícula de 10x24, eliminación de filas, y el registro de niveles y puntuaciones temporales.")
+
+    Rel(player, sistema_tetris, "Juega e interactúa con", "Eventos de teclado")
 ```
 
 ---
