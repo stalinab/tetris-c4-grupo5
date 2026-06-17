@@ -107,17 +107,18 @@ C4Container
     title Diagrama C4 Container — Infraestructura lógica del juego Tetris
     Person(player, "Jugador", "Interactúa con el juego mediante el teclado y visualiza el tablero en pantalla")
     System_Boundary(tetrisSystem, "Sistema Tetris") {
-        Container(gameApp, "Aplicación del Juego", "JavaScript / HTML5 / Canvas", "Interfaz de usuario principal. Renderiza el tablero, los tetrominós, la puntuación y gestiona toda la lógica del juego en tiempo real.")
-        Container(inputHandler, "Módulo de Entrada", "JavaScript / Event API", "Captura y procesa los eventos de teclado del jugador. Traduce las teclas en comandos de movimiento y rotación.")
-        Container(gameEngine, "Motor del Juego", "JavaScript / Game Loop", "Controla la lógica central: gravedad, colisiones, fijación de piezas, eliminación de filas y detección de derrota.")
-        Container(localStore, "Almacenamiento Local", "LocalStorage / IndexedDB", "Persiste las configuraciones del jugador y los puntajes máximos entre sesiones.")
+        Container(gameApp, "Aplicación del Juego", "JavaScript / HTML5 / Canvas", "Interfaz principal. Renderiza el tablero, los tetrominós, la vista previa, la puntuación y las estadísticas del juego.")
+        Container(inputHandler, "Módulo de Entrada", "JavaScript / Event API", "Captura y procesa eventos de teclado. Traduce las teclas en comandos de movimiento y rotación (R4, R5).")
+        Container(gameEngine, "Motor del Juego", "JavaScript / Game Loop", "Gestiona gravedad, movimientos, rotaciones, colisiones, fijación de piezas, eliminación de filas y detección de derrota (R2-R16).")
+        Container(scoreManager, "Gestor de Puntuación y Estadísticas", "JavaScript", "Calcula puntuación, niveles, dobles, triples, tetrises y estadísticas finales de la partida (R21-R30).")
     }
     Rel(player, gameApp, "Visualiza el juego en pantalla")
     Rel(player, inputHandler, "Pulsa teclas para mover y rotar piezas")
     Rel(inputHandler, gameEngine, "Envía comandos de movimiento y rotación")
-    Rel(gameApp, gameEngine, "Solicita estado actualizado del tablero para renderizar")
-    Rel(gameEngine, gameApp, "Retorna estado del tablero, puntuación y nivel")
-    Rel(gameEngine, localStore, "Lee y escribe puntajes máximos y configuraciones")
+    Rel(gameApp, gameEngine, "Solicita estado actualizado del tablero")
+    Rel(gameEngine, gameApp, "Retorna estado del tablero")
+    Rel(gameEngine, scoreManager, "Notifica filas eliminadas y cambios de nivel")
+    Rel(scoreManager, gameApp, "Actualiza puntuación, nivel y estadísticas")
 ```
 
 ---
@@ -127,19 +128,20 @@ C4Container
 ```mermaid
 C4Component
     title Diagrama C4 Component — Motor interno del juego Tetris
-    Container_Boundary(tetrisApp, "Aplicación del Juego (Interfaz de Usuario)") {
-        Component(inputManager, "Gestor de Entrada de Teclado", "Módulo JS / Event Listener", "Captura eventos de teclado (mover izquierda, derecha, abajo, rotar) y los traduce en comandos. Solo procesa entrada si la partida está activa (R4, R5).")
-        Component(gravityEngine, "Motor de Caída y Gravedad", "Módulo JS / setInterval", "Ejecuta el game loop. Hace caer el tetromino activo automáticamente según el intervalo del nivel actual. Aumenta la velocidad al subir de nivel (R6, R26).")
-        Component(boardController, "Controlador del Tablero", "Módulo JS / Matriz 10x24", "Núcleo del juego. Gestiona la matriz de juego (R2). Valida movimientos y rotaciones (R7, R8, R9). Fija tetrominós (R10, R11, R12). Elimina filas completas (R13, R14). Detecta derrota (R16).")
-        Component(scoreRenderer, "Renderizador del Puntaje", "Módulo JS / DOM Updater", "Muestra y actualiza la puntuación (R21, R23), nivel actual (R22), conteo de dobles, triples y tetrises (R24), filas necesarias para avanzar (R25) y estadísticas al perder (R29).")
+    Container_Boundary(tetrisApp, "Aplicación del Juego") {
+        Component(inputManager, "Gestor de Entrada de Teclado", "Módulo JS / Event Listener", "Captura eventos de teclado (mover izquierda, derecha, abajo y rotar) y los traduce en comandos de juego. Solo procesa entrada cuando la partida está activa (R4, R5).")
+        Component(gravityEngine, "Motor de Caída y Gravedad", "Módulo JS / Game Loop", "Ejecuta el ciclo principal del juego. Hace descender automáticamente el tetromino activo y ajusta la velocidad según el nivel actual (R6, R26).")
+        Component(boardController, "Controlador del Tablero", "Módulo JS / Matriz 10x24", "Gestiona el tablero de juego (R2). Valida movimientos y rotaciones (R7, R8, R9). Fija tetrominós (R10, R11, R12). Elimina filas completas (R13, R14). Genera nuevas piezas (R15) y detecta derrota (R16).")
+        Component(scoreManager, "Gestor de Puntuación y Estadísticas", "Módulo JS", "Calcula y mantiene la puntuación (R21, R23), nivel actual (R22), dobles, triples y tetrises (R24), filas necesarias para avanzar (R25) y estadísticas finales (R29, R30).")
+        Component(renderer, "Renderizador del Juego", "Canvas / DOM", "Representa visualmente el tablero, tetrominós, colores, rejilla, puntuación, nivel, estadísticas y vista previa de la siguiente pieza (R20, R27, R31).")
     }
     Person(player, "Jugador", "Interactúa con el juego mediante el teclado")
-    System_Ext(localStorage, "Almacenamiento Local", "Guarda configuraciones y puntajes máximos")
     Rel(player, inputManager, "Pulsa teclas de movimiento y rotación")
-    Rel(inputManager, boardController, "Envía comandos: mover / rotar tetromino")
-    Rel(gravityEngine, boardController, "Solicita descenso automático en cada tick")
-    Rel(boardController, scoreRenderer, "Notifica filas eliminadas y nivel alcanzado")
-    Rel(scoreRenderer, localStorage, "Persiste puntaje máximo al finalizar la partida")
+    Rel(inputManager, boardController, "Envía comandos de movimiento y rotación")
+    Rel(gravityEngine, boardController, "Solicita descenso automático")
+    Rel(boardController, scoreManager, "Notifica líneas eliminadas y cambios de nivel")
+    Rel(boardController, renderer, "Envía estado actualizado del tablero")
+    Rel(scoreManager, renderer, "Envía puntuación y estadísticas")
 ```
 
 ---
@@ -152,33 +154,34 @@ sequenceDiagram
     participant GEK as Gestor de Entrada<br/>de Teclado
     participant CT as Controlador<br/>del Tablero
     participant MCG as Motor de Caída<br/>y Gravedad
-    participant RP as Renderizador<br/>del Puntaje
+    participant GPE as Gestor de Puntuación<br/>y Estadísticas
     Jugador->>GEK: Pulsa tecla ROTAR (↑ / Z)
-    GEK->>GEK: Valida que la partida esté activa
+    GEK->>GEK: Verifica que la partida esté activa
     GEK->>CT: enviarComando(ROTAR)
-    CT->>CT: Calcula nueva orientación del tetromino (90°)
-    CT->>CT: Valida que no salga del tablero (R7, R8)
-    CT->>CT: Valida que no solape bloques fijos (R9)
+    CT->>CT: Calcula nueva orientación (90°)
+    CT->>CT: Valida límites del tablero (R7, R8)
+    CT->>CT: Valida colisiones con bloques fijos (R9)
     alt Rotación válida
-        CT->>CT: Aplica nueva orientación al tetromino activo
+        CT->>CT: Aplica nueva orientación
         CT-->>GEK: OK
     else Rotación inválida
-        CT-->>GEK: RECHAZADO (sin cambios)
+        CT-->>GEK: Movimiento rechazado
     end
-    GEK-->>Jugador: Visualiza tetromino rotado (o sin cambio)
-    Note over CT, MCG: El game loop de gravedad sigue corriendo en paralelo
-    MCG->>CT: tick() — solicita descenso automático
-    CT->>CT: Valida si puede bajar una celda
-    alt Puede bajar
-        CT->>CT: Mueve tetromino una celda hacia abajo
-    else No puede bajar — colisión inferior
-        CT->>CT: Fija tetromino en el tablero (R10, R11)
+    GEK-->>Jugador: Actualización visual
+    Note over CT,MCG: El game loop continúa ejecutándose
+    MCG->>CT: tick()
+    CT->>CT: Verifica posibilidad de descenso
+    alt Puede descender
+        CT->>CT: Mueve una celda hacia abajo
+    else Colisión inferior
+        CT->>CT: Fija el tetromino (R10, R11)
         CT->>CT: Detecta y elimina filas completas (R13, R14)
-        CT->>RP: notificarFilasEliminadas(cantidad, nivelActual)
-        RP->>RP: Calcula puntuación (sistema Nintendo R23)
-        RP->>RP: Actualiza nivel, dobles, triples, tetrises (R24, R25)
-        RP-->>CT: OK
-        CT->>CT: Solicita nuevo tetromino (R15)
+        CT->>GPE: registrarFilasEliminadas()
+        GPE->>GPE: Calcula puntuación Nintendo (R23)
+        GPE->>GPE: Actualiza nivel actual (R22)
+        GPE->>GPE: Actualiza dobles, triples y tetrises (R24)
+        GPE->>GPE: Actualiza filas necesarias para avanzar (R25)
+        CT->>CT: Genera nuevo tetromino (R15)
         CT->>CT: Verifica condición de derrota (R16)
     end
 ```
