@@ -96,7 +96,21 @@ Este repositorio contiene la resolución de la actividad de Verificación y Vali
 ## Nivel 2 — Diagrama de Contenedores (C4Container)
 
 ```mermaid
-
+C4Container
+    title Diagrama C4 Container — Infraestructura lógica del juego Tetris
+    Person(player, "Jugador", "Interactúa con el juego mediante el teclado y visualiza el tablero en pantalla")
+    System_Boundary(tetrisSystem, "Sistema Tetris") {
+        Container(gameApp, "Aplicación del Juego", "JavaScript / HTML5 / Canvas", "Interfaz de usuario principal. Renderiza el tablero, los tetrominós, la puntuación y gestiona toda la lógica del juego en tiempo real.")
+        Container(inputHandler, "Módulo de Entrada", "JavaScript / Event API", "Captura y procesa los eventos de teclado del jugador. Traduce las teclas en comandos de movimiento y rotación.")
+        Container(gameEngine, "Motor del Juego", "JavaScript / Game Loop", "Controla la lógica central: gravedad, colisiones, fijación de piezas, eliminación de filas y detección de derrota.")
+        Container(localStore, "Almacenamiento Local", "LocalStorage / IndexedDB", "Persiste las configuraciones del jugador y los puntajes máximos entre sesiones.")
+    }
+    Rel(player, gameApp, "Visualiza el juego en pantalla")
+    Rel(player, inputHandler, "Pulsa teclas para mover y rotar piezas")
+    Rel(inputHandler, gameEngine, "Envía comandos de movimiento y rotación")
+    Rel(gameApp, gameEngine, "Solicita estado actualizado del tablero para renderizar")
+    Rel(gameEngine, gameApp, "Retorna estado del tablero, puntuación y nivel")
+    Rel(gameEngine, localStore, "Lee y escribe puntajes máximos y configuraciones")
 ```
 
 ---
